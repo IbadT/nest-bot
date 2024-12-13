@@ -1,0 +1,45 @@
+services:
+  database:
+    container_name: hh_bot-postgressql
+    image: postgres:16.2-bullseye
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - hh_bot-db:/var/lib/postgresql/data
+    networks:
+      - hh_bot-network
+    expose:
+      - "5432"
+    ports:
+      - "127.0.0.1:5432:5432"
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+  # server:
+  #   container_name: hh_bot-nest
+  #   build:
+  #     context: .
+  #     dockerfile: ./_docker/deploy/server/Dockerfile
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - hh_bot-network
+  #   expose:
+  #     - "4200"
+  #   volumes:
+  #     - /app/node_modules
+  #   ports:
+  #     - "127.0.0.1:4200:4200"
+  #   depends_on:
+  #     - database
+
+
+volumes:
+  hh_bot-db:
+    driver: local
+networks:
+  hh_bot-network:

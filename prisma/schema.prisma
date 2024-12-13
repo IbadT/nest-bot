@@ -1,0 +1,23 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  telegram_id       BigInt    @unique
+  username          String
+  has_access        Boolean   @default(true)
+  vacancy_text      String    @default("")
+  vacancy_salary    Int       @default(0)
+  vacancy_location  String    @default("")
+
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+
+  @@map("users")
+}

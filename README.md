@@ -95,9 +95,14 @@
 
 
 
-
+```bash
 docker compose up --build -d
+```
 
+```bash
 cp .env.example .env
+```
 
+```bash
 docker exec -it $(docker ps --filter "name=server" --format "{{.ID}}") ./node_modules/.bin/prisma db push
+```

@@ -12,9 +12,11 @@ model User {
   telegram_id       BigInt    @unique
   username          String
   has_access        Boolean   @default(true)
-  vacancy_text      String    @default("")
+  vacancy_name      String    @default("")
   vacancy_salary    Int       @default(0)
   vacancy_location  String    @default("")
+  client_id         String    @default("")
+  client_secret     String    @default("")
 
   created_at      DateTime    @default(now())
   updated_at      DateTime    @updatedAt

@@ -47,7 +47,12 @@ export enum ENUM_KEYBOARDS {
     BACK_TO_ADMIN = 'BACK_TO_ADMIN',
 
     // BACK_TO_ADMIN_AND_DELETE_LAST = 'BACK_TO_ADMIN_AND_DELETE_LAST',
-}
+    WRITE_DOWN_FOR_JOB = 'WRITE_DOWN_FOR_JOB',
+    INPUT_KEYWORD_FOR_JOB = 'INPUT_KEYWORD_FOR_JOB',
+    GET_KEYWORD_FOR_JOB = 'GET_KEYWORD_FOR_JOB',
+
+    BACK_TO_WORK = 'BACK_TO_WORK'
+};
 
 
 
@@ -135,11 +140,22 @@ export const searchJobsButtons = [
     [{ text: '📍 Местоположение', callback_data: ENUM_KEYBOARDS.LOCATION }],
     [{ text: '💰 Диапазон зарплаты', callback_data: ENUM_KEYBOARDS.SALARY_RANGE }],
     [{ text: '🔍 Поиск', callback_data: ENUM_KEYBOARDS.SEARCH }],
-]
+];
 
+// export const selectAnOptionSearchJubsButtons = [
+//   [{ text: "Записать название вакансии для автоматического поиска", callback_data: ENUM_KEYBOARDS.WRITE_DOWN_FOR_JOB }],
+//   [{ text: "Введите название вакансии", callback_data: ENUM_KEYBOARDS.INPUT_KEYWOARD_FOR_JOB }],
+//   [{ text: "Получить записанное ключевое слово", callback_data: ENUM_KEYBOARDS.GET_KEYWORD_FOR_JOB }],
+// ];
+export const selectAnOptionSearchJobsButtons = [
+  [{ text: "📝 Записать название вакансии для автоматического поиска", callback_data: ENUM_KEYBOARDS.WRITE_DOWN_FOR_JOB }],
+  [{ text: "🔍 Введите название вакансии", callback_data: ENUM_KEYBOARDS.INPUT_KEYWORD_FOR_JOB }],
+  [{ text: "📋 Получить записанное ключевое слово", callback_data: ENUM_KEYBOARDS.GET_KEYWORD_FOR_JOB }],
+];
 
-
-
+export const backButton = [
+  [{ text: "🔙 Назад", callback_data: ENUM_KEYBOARDS.BACK_TO_WORK }]
+];
 
 
 

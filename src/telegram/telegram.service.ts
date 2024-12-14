@@ -6,11 +6,15 @@ import { Logger } from "winston";
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
 import { getAllSessions } from "src/middleware/session.middleware";
 import { PrismaService } from "src/prisma.service";
-import { ENUM_KEYBOARDS, adminButton, adminButtons, mainMenuButtons, searchJobsButtons, viewStatsButtons } from "./keyboards/hh_keyboards";
+import { ENUM_KEYBOARDS, adminButton, adminButtons, mainMenuButtons, searchJobsButtons, selectAnOptionSearchJobsButtons, viewStatsButtons } from "./keyboards/hh_keyboards";
 import { sendReplyWithButtons, updateButtons } from "./utils/utils";
 import { TUser } from "./types/user.type";
 import { ConfigService } from "@nestjs/config";
 import { replyMessageForReply } from "./helpers/replyMessageForReply";
+import { writeDownForJob } from "src/common/writeDownForJob";
+import { getVacancyFromHH, makeStringFromVacancies } from "src/api/get-vacancy-from-hh";
+import { inputKeywordForJob } from "src/common/inputKeywordForJob";
+import { Cron, CronExpression } from "@nestjs/schedule";
 
 // {
 //     id: 504081934,
@@ -32,8 +36,11 @@ export class TelegramService {
     constructor(
         @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
         private readonly prisma: PrismaService,
-        private readonly configService: ConfigService
-    ) {}
+        private readonly configService: ConfigService,
+        @InjectBot() private readonly bot: Telegraf<Context>,
+    ) {
+        this.bot = new Telegraf(configService.get<string>("TELEGRAM_TOKEN"));
+    }
 
     // /**
     //  * Функция для сложения двух чисел.
@@ -91,7 +98,7 @@ export class TelegramService {
         }); 
         // await ctx.reply(userList);
         await sendReplyWithButtons(ctx, userList, [viewStatsButtons[3]])
-    }
+    };
 
 
     async viewStats(ctx: any) {
@@ -110,21 +117,55 @@ export class TelegramService {
 
 
 
+    async selectOptions(ctx: any) {
+        await updateButtons(ctx, selectAnOptionSearchJobsButtons);
+    };
+
+
+
+
+
+    async writeDownForJob(ctx: any) {
+        await inputKeywordForJob(ctx);
+    }
+
+    async inputKeywordForJob(ctx: any) {
+        await writeDownForJob(ctx);
+    };
+
+    async getKeywordForJob(ctx: any) {
+        const word = await this.prisma.user.findFirst({
+            where: {
+                telegram_id: ctx.from.id
+            },
+            select: {
+                vacancy_name: true
+            }
+        });
+        await ctx.reply(word.vacancy_name);
+        // await updateButtons(ctx)
+    }
+
+
+
+    // не используется
     async searchJobs(ctx: any) {
         // await updateButtons(ctx, searchJobsButtons);
         const apiUrl = 'https://api.hh.ru/vacancies';
         // const keyword = 'Javascript'
         // const keyword = 'Backend'
         const keyword = 'Node.js'
-        const url = `${apiUrl}?text=${encodeURIComponent(keyword)}`
-        const response = await fetch(url);
-        if(!response.ok) {
-            throw new Error('Failed to fetch vacancies from hh.ru');
-        };
-        const data = await response.json();
+        // const vacancies = await getVacancyFromHH(this.configService.get<string>("GET_VACANCIES"), keyword)
+        const vacancies = await getVacancyFromHH(keyword)
+        // const url = `${apiUrl}?text=${encodeURIComponent(keyword)}`
+        // const response = await fetch(url);
+        // if(!response.ok) {
+        //     throw new Error('Failed to fetch vacancies from hh.ru');
+        // };
+        // const data = await response.json();
 
         let message = 'Вакансии:\n\n'; 
-        data.items.forEach(vacancy => { 
+        vacancies.items.forEach(vacancy => { 
             message += `Название: ${vacancy.name}\n`; 
             message += `Зарплата: ${vacancy.salary ? `${vacancy.salary.from} - ${vacancy.salary.to} ${vacancy.salary.currency}` : 'не указана'}\n`; 
             message += `URL: ${vacancy.alternate_url}\n\n`;
@@ -141,6 +182,10 @@ export class TelegramService {
 
 
 
+    async backToWork(ctx: any) {
+        await updateButtons(ctx, selectAnOptionSearchJobsButtons)
+        // await ctx.deleteMessage();
+    }
 
 
 
@@ -154,7 +199,7 @@ export class TelegramService {
 
 
     async onTextHandleAction(ctx: any, message: string): Promise<void> {
-        ctx.session.__scenes = "Введите client_id";
+        // ctx.session.__scenes = "Введите client_id";
         this.logger.info("Вызвана функция onTextHandleAction");
         await replyMessageForReply(ctx, message, this.logger);
     }
@@ -164,7 +209,23 @@ export class TelegramService {
 
 
 
-
+    async agree(ctx: any) {
+        const vacancy_name = ctx.session.vacancy_name
+        const respone = await this.prisma.user.update({
+            where: {
+                telegram_id: ctx.from.id
+            },
+            data: {
+                vacancy_name
+            }
+        });
+        if(!respone) {
+            await ctx.reply("❌ Добавление вакансии произошло с ошибкой ❌")
+            return await updateButtons(ctx, selectAnOptionSearchJobsButtons);
+        };
+        await ctx.reply("✅ Название вакансии добавлено ✅");
+        return await updateButtons(ctx, selectAnOptionSearchJobsButtons);
+    }
 
 
 
@@ -256,7 +317,43 @@ export class TelegramService {
         return await this.prisma.user.create({
             data: user
         });
-    }
+    };
+
+
+
+    // @Cron('0 0 9 * * *')
+    // @Cron('* * * * * *')
+    // @Cron(CronExpression.EVERY_10_SECONDS)
+    // @Cron(CronExpression.EVERY_MINUTE)
+    async getCronVacancy() {
+        const users = await this.prisma.user.findMany({
+            where: {
+                has_access: true, 
+                vacancy_name: {
+                    not: ""
+                },
+            },
+            select: {
+                telegram_id: true,
+                vacancy_name: true,
+            }
+        });
+        
+        const responses = await Promise.all(users.map(async ({ telegram_id, vacancy_name}) => {
+            const data = await getVacancyFromHH(vacancy_name);
+            return {
+                telegram_id,
+                data
+            }
+        }));
+
+        const messageHeader = "🌞 Доброе утро, Эдуард! 🌟 Вот свежие утренние вакансии по Вашему запросу 🔍:";
+        for(const response of responses) {
+            const vacancies = await makeStringFromVacancies(response.data.items);
+            const fullMessage = `${messageHeader}\n\n${vacancies}`;
+            await this.bot.telegram.sendMessage(Number(response.telegram_id), fullMessage);
+        }
+    };
     
 };
 

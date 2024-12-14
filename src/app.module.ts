@@ -8,6 +8,8 @@ import { sessionMiddleware } from './middleware/session.middleware';
 import { WinstonModule } from 'nest-winston';
 import winston from 'winston';
 import { PrismaService } from './prisma.service';
+import { ScheduleModule } from '@nestjs/schedule';
+import { EnvConfigModule } from './env-config/env-config.module';
 
 @Module({
   imports: [
@@ -15,6 +17,7 @@ import { PrismaService } from './prisma.service';
     ConfigModule.forRoot({
       isGlobal: true
     }),
+    ScheduleModule.forRoot(),
     WinstonModule.forRoot({
       transports: [
         new winston.transports.File({
@@ -48,7 +51,8 @@ import { PrismaService } from './prisma.service';
         middlewares: [sessionMiddleware]
       }),
       inject: [ConfigService]
-    })
+    }),
+    EnvConfigModule
   ],
   providers: [TelegramUpdate, TelegramService, PrismaService],
 })

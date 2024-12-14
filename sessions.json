@@ -3,9 +3,19 @@
     {
       "id": "504081934:504081934",
       "data": {
-        "__scenes": "",
+        "__scenes": "write_down_for_job",
         "tg_id": 504081934,
-        "is_auth": true
+        "is_auth": true,
+        "vacancy_name": "Backend developer"
+      }
+    },
+    {
+      "id": "1071119371:1071119371",
+      "data": {
+        "__scenes": "",
+        "tg_id": 1071119371,
+        "is_auth": true,
+        "vacancy_name": "Учитель физики"
       }
     }
   ]

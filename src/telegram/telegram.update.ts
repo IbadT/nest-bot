@@ -67,7 +67,9 @@ export class TelegramUpdate {
 
     @Action(ENUM_KEYBOARDS.SEARCH_JOBS)
     async searchJobs(@Ctx() ctx: Context) {
-        await this.telegramService.searchJobs(ctx);
+        // выбрать кнопки
+        await this.telegramService.selectOptions(ctx)
+        // await this.telegramService.searchJobs(ctx);
     };
     
     @Action(ENUM_KEYBOARDS.HH_REGISTER)
@@ -248,6 +250,37 @@ export class TelegramUpdate {
     };
 
 
+    @Action(ENUM_KEYBOARDS.WRITE_DOWN_FOR_JOB)
+    async writeDownForJob(@Ctx() ctx: Context) {
+        await this.telegramService.writeDownForJob(ctx);
+    };
+
+    @Action(ENUM_KEYBOARDS.INPUT_KEYWORD_FOR_JOB)
+    async inputKeywordForJob(@Ctx() ctx: Context) {
+        await this.telegramService.inputKeywordForJob(ctx);
+    };
+
+    @Action(ENUM_KEYBOARDS.GET_KEYWORD_FOR_JOB)
+    async getKeywordForJob(@Ctx() ctx: Context) {
+        await this.telegramService.getKeywordForJob(ctx);
+    };
+
+
+
+    @Action(ENUM_KEYBOARDS.BACK_TO_WORK)
+    async backToWork(@Ctx() ctx: Context) {
+        await this.telegramService.backToWork(ctx);
+    };
+
+
+
+    
+    @Action("AGREE")
+    async agree(@Ctx() ctx: Context) {
+        await this.telegramService.agree(ctx);
+    };
+
+
 
 
 
@@ -290,7 +323,6 @@ export class TelegramUpdate {
         @Ctx() ctx: Context, @Message("text") message: string
     ): Promise<void> {
         await this.telegramService.onTextHandleAction(ctx, message);
-        // await replyMessageForReply(ctx, message);
     };
 
     
